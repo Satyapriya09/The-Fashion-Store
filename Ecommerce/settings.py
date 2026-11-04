@@ -19,13 +19,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'd!h2ymiof1ravg$^e%z208+r8*1(euwo2#5z5tjme6nj*%$v^x'
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false').lower() in {'1', 'true', 'yes'}
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ValueError('Set DJANGO_SECRET_KEY when DEBUG is disabled.')
+    SECRET_KEY = 'django-insecure-local-development-key'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]').split(',')
+    if host.strip()
+]
 
 
 # Application definition
@@ -39,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

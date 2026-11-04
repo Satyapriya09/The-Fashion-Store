@@ -1,62 +1,96 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Required meta tags -->
+<head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f7f4">
+    <title>{% block title %}The Fashion Store{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'Shop/site.css' %}">
+</head>
+<body>
+    <div class="announcement-bar">A little more you, in every season <span aria-hidden="true">&#8594;</span></div>
+    <header class="site-header">
+        <a class="wordmark" href="/Shop/" aria-label="The Fashion Store home">the fashion <span>store.</span></a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation" aria-label="Open navigation">
+            <span></span><span></span>
+        </button>
+        <div class="site-navigation" id="site-navigation">
+            <nav class="primary-nav" aria-label="Main navigation">
+                <a href="/Shop/">Shop</a>
+                <a href="/Shop/About/">Our story</a>
+                <a href="/Shop/Contact/">Contact</a>
+                <a href="/Shop/Track_Order/">Track order</a>
+            </nav>
+            <form class="site-search" action="/Shop/Search/" method="get" role="search">
+                <label class="sr-only" for="site-search-input">Search products</label>
+                <input id="site-search-input" type="search" name="q" placeholder="Search the store" value="{{ request.GET.q|default:'' }}">
+                <button type="submit" aria-label="Search">&#8594;</button>
+            </form>
+            <a class="bag-link" href="/Shop/Checkout/" aria-label="Shopping bag, {{ cart_count }} items">
+                Bag <span class="bag-count" id="cart">0</span>
+            </a>
+        </div>
+    </header>
+    <main>
+        {% block body %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <a class="wordmark footer-wordmark" href="/Shop/">the fashion <span>store.</span></a>
+        <p>Everyday pieces, chosen with care.</p>
+        <span class="footer-note">Made for your kind of day.</span>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script>
+        (function () {
+            var cart = {};
+            try {
+                cart = JSON.parse(localStorage.getItem('cart') || '{}') || {};
+            } catch (error) {
+                localStorage.removeItem('cart');
+            }
 
-    <title>{% block title %} {%  endblock%}</title>
-       <style>
-        {% block css %} {%  endblock%}
-  </style>
-  </head>
-  <body>
+            function saveCart() {
+                localStorage.setItem('cart', JSON.stringify(cart));
+                var count = Object.keys(cart).reduce(function (total, key) {
+                    return total + (Array.isArray(cart[key]) ? Number(cart[key][0]) || 0 : 0);
+                }, 0);
+                var counter = document.getElementById('cart');
+                counter.textContent = count;
+                document.querySelector('.bag-link').setAttribute('aria-label', 'Shopping bag, ' + count + ' items');
+            }
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <a class="navbar-brand" href="/Shop">The Fashion Store</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+            document.addEventListener('click', function (event) {
+                var button = event.target.closest('[data-add-to-cart]');
+                if (!button) return;
+                var key = 'pr' + button.dataset.productId;
+                if (Array.isArray(cart[key])) {
+                    cart[key][0] = Number(cart[key][0]) + 1;
+                    cart[key][2] = Number(button.dataset.productPrice) || cart[key][2] || 0;
+                } else {
+                    cart[key] = [1, button.dataset.productName, Number(button.dataset.productPrice) || 0];
+                }
+                saveCart();
+                button.textContent = 'Added to bag';
+                window.setTimeout(function () { button.textContent = 'Add to bag'; }, 1100);
+                if (button.hasAttribute('data-checkout-after-add')) {
+                    window.location.href = '/Shop/Checkout/';
+                }
+            });
 
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item active">
-        <a class="nav-link" href="/Shop">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/Shop/About">About Us</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/Shop/Contact">Contact Us</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/Shop/Track_Order">Tracking Order</a>
-      </li>
-    </ul>
-    <form class="form-inline my-2 my-lg-0">
-      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-    </form>
-    <button type="button" class="btn btn-secondary mx-2" id="popcart" data-container="body" data-toggle="popover"
-            data-placement="bottom" data-html="true" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
-        Cart(<span id="cart">0</span>)
-    </button>
-  </div>
-</nav>
-{% block body %} {%  endblock%}
-
-
-  <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.js"
-  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
-  crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-{% block js %} {%  endblock%}
-
-  </body>
+            var menuButton = document.querySelector('.menu-toggle');
+            menuButton.addEventListener('click', function () {
+                var isOpen = menuButton.getAttribute('aria-expanded') === 'true';
+                menuButton.setAttribute('aria-expanded', String(!isOpen));
+                document.getElementById('site-navigation').classList.toggle('is-open', !isOpen);
+            });
+            saveCart();
+        }());
+    </script>
+    {% block js %}{% endblock %}
+</body>
 </html>

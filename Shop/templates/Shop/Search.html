@@ -1,6 +1,39 @@
 {% extends 'Shop/Basic.html' %}
 
+{% block title %}Search | The Fashion Store{% endblock %}
 
-{% block title %} Search Here {%  endblock%}
-
-{% block body %} This is our About {%  endblock%}
+{% block body %}
+<section class="catalog-page">
+	<p class="eyebrow">Find your next favourite</p>
+	<h1>Search the store</h1>
+	<form class="catalog-search" action="/Shop/Search/" method="get" role="search">
+		<label class="sr-only" for="catalog-query">Search products and collections</label>
+		<input id="catalog-query" type="search" name="q" value="{{ query }}" placeholder="Try a product or collection">
+		<button class="button button-dark" type="submit">Search <span aria-hidden="true">&#8594;</span></button>
+	</form>
+	{% if query %}
+	<div class="section-heading search-heading">
+		<div><p class="eyebrow">Search results</p><h2>“{{ query }}”</h2></div>
+		<span class="product-count">{{ products|length }} pieces</span>
+	</div>
+	{% if products %}
+	<div class="product-grid">
+		{% for item in products %}
+		<article class="product-card">
+			<a class="product-image-link" href="/Shop/products/{{ item.id }}" aria-label="View {{ item.product_name }}">
+				{% if item.image %}<img class="product-image" src="{{ item.image.url }}" alt="{{ item.product_name }}" loading="lazy">{% endif %}
+				<span class="product-category">{{ item.category }}</span>
+			</a>
+			<div class="product-info">
+				<div><h3><a href="/Shop/products/{{ item.id }}">{{ item.product_name }}</a></h3><p class="product-price">&#8377;{{ item.price }}</p></div>
+				<button class="add-button" type="button" data-add-to-cart data-product-id="{{ item.id }}" data-product-name="{{ item.product_name }}" data-product-price="{{ item.price }}">Add to bag <span aria-hidden="true">+</span></button>
+			</div>
+		</article>
+		{% endfor %}
+	</div>
+	{% else %}
+	<p class="empty-state">No pieces matched that search. Try another name or collection.</p>
+	{% endif %}
+	{% endif %}
+</section>
+{% endblock %}
